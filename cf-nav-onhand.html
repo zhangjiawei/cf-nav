@@ -70,7 +70,7 @@
   <section>
     <h2>日常维护</h2>
     <h3>更新源码</h3>
-    <p>在 <a href="https://github.com/zhangjiawei/cf-nav">cf-nav 仓库</a>的 <code>lineagett</code> 分支提交修改；Cloudflare 的 Git 构建连接会按仓库变更重新运行 <code>npx wrangler deploy</code>。在 Worker「部署」页检查新构建状态，再打开自定义域核验。同步上游前先检查上游改动与本仓库部署配置是否冲突。</p>
+    <p>在 <a href="https://github.com/zhangjiawei/cf-nav">cf-nav 仓库</a>的 <code>lineagett</code> 分支提交修改。当前 Cloudflare 构建设置提示「此项目已与您的 Git 帐户断开连接」及 GitHub 用户信息获取错误；文档提交后未观察到新的构建。因此，后续不能仅凭 GitHub 提交认定已上线。先在 Cloudflare 修复 GitHub 授权与仓库连接，并在「部署」页确认新提交成功构建；在此之前可由已授权的 Wrangler 部署该仓库源码。部署后再次打开自定义域核验。同步上游前检查与本仓库配置的冲突。</p>
     <h3>更换管理员密码</h3>
     <p>在 Worker「设置 → 运行时变量和密钥」编辑生产环境 <code>ADMIN_PASSWORD</code>，使用至少 8 字符的新值，保存并部署。不要把密码写入仓库、提交消息或本文档。<code>JWT_SECRET</code> 至少 32 字符。</p>
     <h3>数据与故障</h3>
