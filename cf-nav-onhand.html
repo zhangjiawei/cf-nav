@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cf-nav 部署与维护手册</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #18302b; background: #f3f7f5; }
+    * { box-sizing: border-box; }
+    body { margin: 0; line-height: 1.7; }
+    main { max-width: 920px; margin: 48px auto; padding: 0 24px 64px; }
+    header { padding: 34px 38px; background: #103e35; color: #fff; border-radius: 18px; }
+    h1 { margin: 0 0 10px; font-size: clamp(28px, 5vw, 42px); line-height: 1.2; }
+    header p { margin: 0; color: #c6e4d9; }
+    section { margin-top: 20px; padding: 24px 30px; background: #fff; border: 1px solid #dce9e3; border-radius: 14px; }
+    h2 { margin: 0 0 12px; font-size: 22px; }
+    h3 { margin-bottom: 4px; }
+    p, li { margin-top: 6px; }
+    a { color: #0b6955; overflow-wrap: anywhere; }
+    code { padding: 2px 5px; background: #eaf3ee; border-radius: 4px; overflow-wrap: anywhere; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #e3ece7; vertical-align: top; }
+    th { width: 26%; }
+    .notice { border-left: 4px solid #1a8a6b; padding: 10px 14px; background: #edf8f2; }
+    footer { margin-top: 22px; color: #5b746a; font-size: 14px; }
+    @media print { body { background: #fff; } main { margin: 0 auto; } section, header { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>cf-nav 部署与维护手册</h1>
+    <p>Cloudflare Workers · GitHub Fork · nav.izjw.top<br>实际部署记录：2026-11-03</p>
+  </header>
+
+  <section>
+    <h2>当前资源</h2>
+    <table>
+      <tr><th>访问地址</th><td><a href="https://nav.izjw.top/">https://nav.izjw.top/</a></td></tr>
+      <tr><th>GitHub 源码</th><td><a href="https://github.com/zhangjiawei/cf-nav">zhangjiawei/cf-nav</a>，Fork 自 <a href="https://github.com/lineagett/cf-workers-nav">lineagett/cf-workers-nav</a>；默认分支 <code>lineagett</code></td></tr>
+      <tr><th>Worker</th><td><code>cf-nav</code>；备用地址 <a href="https://cf-nav.zhangjiaweixt.workers.dev/">cf-nav.zhangjiaweixt.workers.dev</a></td></tr>
+      <tr><th>KV</th><td><code>cf-nav-card-order</code>，Worker 绑定名 <code>CARD_ORDER</code></td></tr>
+      <tr><th>控制台</th><td><a href="https://dash.cloudflare.com/bf156949cac7321ca87b4f8f72751cfa/workers/services/view/cf-nav/production">Worker 生产环境</a></td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>本次部署步骤</h2>
+    <ol>
+      <li>在 GitHub 将上游仓库 Fork 到 <code>zhangjiawei/cf-nav</code>，保留上游来源和 <code>lineagett</code> 分支。</li>
+      <li>在 Cloudflare Workers KV 创建 <code>cf-nav-card-order</code> 命名空间。</li>
+      <li>向 Fork 提交 <code>wrangler.jsonc</code>：Worker 名 <code>cf-nav</code>、入口 <code>workers.js</code>、兼容日期及 <code>CARD_ORDER</code> KV 绑定。该文件是公开部署配置。</li>
+      <li>在 Workers 和 Pages 选择「Continue with GitHub」并连接 <code>zhangjiawei/cf-nav</code>，项目名 <code>cf-nav</code>，部署命令 <code>npx wrangler deploy</code>，无需构建命令。Cloudflare 建立 Git 构建连接并完成首次部署。</li>
+      <li>在 Worker「设置 → 运行时变量和密钥」的生产环境添加 <code>ADMIN_PASSWORD</code> 与 <code>JWT_SECRET</code>，类型均选择「密钥」，保存并部署。创建时的「构建变量」不能代替运行时密钥。</li>
+      <li>在 Worker「域」中选择「添加域名」，区域选 <code>izjw.top</code>、子域名填 <code>nav</code>、启用对象为生产。Cloudflare 创建对应的自定义域绑定。</li>
+    </ol>
+    <p class="notice">密钥值不在 GitHub、Wrangler 配置或本手册中。管理员密码通过部署会话单独交付；请保存在密码管理器。JWT 密钥仅保存在 Cloudflare，重设它会让已有登录令牌失效。</p>
+  </section>
+
+  <section>
+    <h2>验证记录</h2>
+    <ul>
+      <li>GitHub 提交 <code>f4c349c</code> 的差异只有新增的 11 行 <code>wrangler.jsonc</code>；检查确认其中没有管理员密码和 JWT 密钥。</li>
+      <li>Cloudflare 构建 <code>91b49010</code> 上传 <code>cf-nav</code> 成功，日志显示 <code>env.CARD_ORDER</code> KV 绑定；生产部署状态为「就绪」。</li>
+      <li><code>https://nav.izjw.top/</code> 加载导航页；<code>/api/getLinks</code> 返回 HTTP 200；管理员登录返回 HTTP 200。</li>
+      <li>验收时写入一个临时分类，读取确认数据持久化；随后删除测试内容，公开读取再次返回空分类 <code>{"categories":{}}</code>。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>日常维护</h2>
+    <h3>更新源码</h3>
+    <p>在 <a href="https://github.com/zhangjiawei/cf-nav">cf-nav 仓库</a>的 <code>lineagett</code> 分支提交修改；Cloudflare 的 Git 构建连接会按仓库变更重新运行 <code>npx wrangler deploy</code>。在 Worker「部署」页检查新构建状态，再打开自定义域核验。同步上游前先检查上游改动与本仓库部署配置是否冲突。</p>
+    <h3>更换管理员密码</h3>
+    <p>在 Worker「设置 → 运行时变量和密钥」编辑生产环境 <code>ADMIN_PASSWORD</code>，使用至少 8 字符的新值，保存并部署。不要把密码写入仓库、提交消息或本文档。<code>JWT_SECRET</code> 至少 32 字符。</p>
+    <h3>数据与故障</h3>
+    <p>书签数据保存在 <code>cf-nav-card-order</code> KV 中，更新 Worker 不应删除该命名空间。若页面显示配置错误，先检查生产环境的两个运行时密钥和 <code>CARD_ORDER</code> 绑定；若域名不可达，检查 Worker「域」里的 <code>nav.izjw.top</code> 状态和 <code>izjw.top</code> DNS 记录。</p>
+  </section>
+  <footer>这份文档记录实际操作，不包含任何可用于登录或签发令牌的秘密值。</footer>
+</main>
+</body>
+</html>
