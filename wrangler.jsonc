@@ -1,0 +1,11 @@
+{
+  "name": "cf-nav",
+  "main": "workers.js",
+  "compatibility_date": "2025-09-01",
+  "kv_namespaces": [
+    {
+      "binding": "CARD_ORDER",
+      "id": "21ff4048e6ea4705a45f0ba34f56cca7"
+    }
+  ]
+}
